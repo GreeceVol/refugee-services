@@ -1,0 +1,35 @@
+@import "../../app-variables";
+
+.org {
+  font-size: 42;
+  padding-top: 50;
+  color: $text-color;
+}
+
+.subtitle {
+  font-size: 16;
+  margin-bottom: 30;
+  color: $secondary;
+}
+
+.failed-login {
+  font-size: 13;
+}
+
+.contact-admin {
+  color: $error-dark;
+  margin-left: 5;
+  text-decoration: underline;
+}
+
+Button, TextField {
+  margin-left: 16;
+  margin-right: 16;
+  margin-bottom: 10;
+}
+
+.submit-button {
+  background-color: $btn-color;
+  color: white;
+  margin-top: 20;
+}

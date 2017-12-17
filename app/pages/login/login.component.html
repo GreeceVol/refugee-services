@@ -1,0 +1,14 @@
+<StackLayout #loginContainer>
+  <Label class="org" text="GreeceVol" horizontalAlignment="center"></Label>
+  <Label class="subtitle" text="Volunteer Login" horizontalAlignment="center"></Label>
+
+  <TextField #email hint="Email Address" keyboardType="email" [(ngModel)]="volunteer.email" autocorrect="false" autocapitalizationType="none"></TextField>
+  <TextField #password hint="Password" secure="true" [(ngModel)]="volunteer.password"></TextField>
+
+  <Button text="Login" [visibility]="isLoading ? 'collapse' : 'visible'" class="submit-button" (tap)="login()"></Button>
+  <ActivityIndicator [busy]="isLoading" [visibility]="isLoading ? 'visible' : 'collapse'" horizontalAlignment="center" verticalAlignment="center"></ActivityIndicator>
+  <StackLayout class="failed-login" orientation="horizontal" horizontalAlignment="center" [visibility]="failCount >=3 && !isLoading ? 'visible' : 'collapse'">
+    <Label text="Something wrong?"></Label>
+    <Label class="contact-admin" text="Contact GreeceVol Admin" (tap)="contactAdmin()"></Label>
+  </StackLayout>
+</StackLayout>
