@@ -87,13 +87,13 @@ export class LoginComponent implements OnInit {
         return email.compose({
           subject: 'Issue logging into GreeceVol app',
           body: this.volunteer.email ? `Username (email): ${this.volunteer.email}\n\nTODO: Please elaborate on your login issue here` : `nTODO: Please elaborate on your login issue here`,
-          to: ['admin@greecevol.org']
+          to: ['admin@greecevol.info']
         });
       })
       .catch(() => {
         dialogs.alert({
           title: 'Cannot send email',
-          message: 'Unable to create an email draft on your device. Please contact admin@greecevol.org manually',
+          message: 'Unable to create an email draft on your device. Please contact admin@greecevol.info manually',
           okButtonText: 'OK'
         });
       });
