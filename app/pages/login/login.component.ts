@@ -5,6 +5,7 @@ import 'rxjs/add/operator/finally';
 import * as dialogs from 'ui/dialogs';
 import { Page } from 'ui/page';
 
+import { Key } from '../../shared/constants/key.constants';
 import { Volunteer } from '../../shared/models/volunteer';
 import { AuthService } from '../../shared/services/auth.service';
 import { StorageService } from '../../shared/services/storage.service';
@@ -30,7 +31,7 @@ export class LoginComponent implements OnInit {
   ) {
     this.volunteer = new Volunteer();
 
-    if (this.storageService.getString(StorageService.KEY_TOKEN)) {
+    if (this.storageService.getString(Key.TOKEN)) {
       this.navigateToHome();
     }
   }

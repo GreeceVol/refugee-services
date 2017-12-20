@@ -5,6 +5,7 @@ import 'rxjs/add/operator/map';
 import { Observable } from 'rxjs/Rx';
 
 import { Api } from '../constants/api.constants';
+import { Key } from '../constants/key.constants';
 import { Volunteer } from '../models/volunteer';
 import { StorageService } from './storage.service';
 
@@ -31,7 +32,7 @@ export class AuthService {
     )
       .map((response: Response) => response.json())
       .do((data: ILoginResponse) => {
-        this.storageService.setString(StorageService.KEY_TOKEN, data.token);
+        this.storageService.setString(Key.TOKEN, data.token);
       });
   }
 }

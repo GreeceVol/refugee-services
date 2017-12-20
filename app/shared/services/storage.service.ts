@@ -4,8 +4,6 @@ import * as appSettings from 'application-settings';
 @Injectable()
 export class StorageService {
 
-  static KEY_TOKEN = 'token';
-
   getString(key: string, defaultValue?: string): string {
     return appSettings.getString(key, defaultValue);
   }
