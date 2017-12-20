@@ -8,7 +8,6 @@ import { Page } from 'ui/page';
 import { Key } from '../../shared/constants/key.constants';
 import { Volunteer } from '../../shared/models/volunteer';
 import { AuthService } from '../../shared/services/auth.service';
-import { StorageService } from '../../shared/services/storage.service';
 
 @Component({
   selector: 'Login',
@@ -25,15 +24,10 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private storageService: StorageService,
     private routerExtensions: RouterExtensions,
     private page: Page
   ) {
     this.volunteer = new Volunteer();
-
-    if (this.storageService.getString(Key.TOKEN)) {
-      this.navigateToHome();
-    }
   }
 
   ngOnInit(): void {

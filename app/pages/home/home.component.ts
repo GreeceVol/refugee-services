@@ -1,6 +1,10 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { RouterExtensions } from 'nativescript-angular/router/router-extensions';
 import { DrawerTransitionBase, SlideInOnTopTransition } from 'nativescript-pro-ui/sidedrawer';
 import { RadSideDrawerComponent } from 'nativescript-pro-ui/sidedrawer/angular';
+
+import { Key } from '../../shared/constants/key.constants';
+import { StorageService } from '../../shared/services/storage.service';
 
 @Component({
   selector: 'Home',
@@ -15,6 +19,15 @@ export class HomeComponent implements OnInit {
   @ViewChild('drawer') drawerComponent: RadSideDrawerComponent;
 
   private _sideDrawerTransition: DrawerTransitionBase;
+
+  constructor(
+    private storageService: StorageService,
+    private routerExtensions: RouterExtensions
+  ) {
+    if (!this.storageService.getString(Key.TOKEN)) {
+      this.navigateToLogin();
+    }
+  }
 
   /* ***********************************************************
   * Use the sideDrawerTransition property to change the open/close animation of the drawer.
@@ -33,5 +46,9 @@ export class HomeComponent implements OnInit {
   *************************************************************/
   onDrawerButtonTap(): void {
     this.drawerComponent.sideDrawer.showDrawer();
+  }
+
+  private navigateToLogin() {
+    this.routerExtensions.navigate(['/login'], { clearHistory: true });
   }
 }
