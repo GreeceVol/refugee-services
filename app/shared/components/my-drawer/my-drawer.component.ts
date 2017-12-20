@@ -1,4 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { RouterExtensions } from 'nativescript-angular/router/router-extensions';
+
+import { AuthService } from '../../services/auth.service';
 
 /* ***********************************************************
 * Keep data that is displayed in your app drawer in the MyDrawer component class.
@@ -10,7 +13,7 @@ import { Component, Input, OnInit } from '@angular/core';
   templateUrl: './my-drawer.component.html',
   styleUrls: ['./my-drawer.component.css']
 })
-export class MyDrawerComponent implements OnInit {
+export class MyDrawerComponent {
   /* ***********************************************************
   * The "selectedPage" is a component input property.
   * It is used to pass the current page title from the containing page component.
@@ -18,11 +21,10 @@ export class MyDrawerComponent implements OnInit {
   *************************************************************/
   @Input() selectedPage: string;
 
-  ngOnInit(): void {
-    /* ***********************************************************
-    * Use the MyDrawerComponent "onInit" event handler to initialize the properties data values.
-    *************************************************************/
-  }
+  constructor(
+    private authService: AuthService,
+    private routerExtensions: RouterExtensions
+  ) { }
 
   /* ***********************************************************
   * The "isPageSelected" function is bound to every navigation item on the <MyDrawerItem>.
@@ -31,5 +33,10 @@ export class MyDrawerComponent implements OnInit {
   *************************************************************/
   isPageSelected(pageTitle: string): boolean {
     return pageTitle === this.selectedPage;
+  }
+
+  logout() {
+    this.authService.logout();
+    this.routerExtensions.navigate(['/login'], { clearHistory: true });
   }
 }

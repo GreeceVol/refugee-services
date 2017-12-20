@@ -35,4 +35,8 @@ export class AuthService {
         this.storageService.setString(Key.TOKEN, data.token);
       });
   }
+
+  logout() {
+    this.storageService.clearAll();
+  }
 }

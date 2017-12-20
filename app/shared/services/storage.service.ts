@@ -19,4 +19,12 @@ export class StorageService {
   setNumber(key: string, value: number): void {
     return appSettings.setNumber(key, value);
   }
+
+  clear(key: string): void {
+    return appSettings.remove(key);
+  }
+
+  clearAll(): void {
+    return appSettings.clear();
+  }
 }

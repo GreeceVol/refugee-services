@@ -15,10 +15,13 @@ Feel free to customize layouts and components to change how your app drawer look
       </MyDrawerItem>
       <MyDrawerItem title="History" route="/history" icon="&#xf1ea;" [isSelected]="isPageSelected('History')">
       </MyDrawerItem>
+      <MyDrawerItem title="Settings" route="/settings" icon="&#xf013;" [isSelected]="isPageSelected('Settings')">
+      </MyDrawerItem>
+
 
       <StackLayout class="hr-light"></StackLayout>
 
-      <MyDrawerItem title="Settings" route="/settings" icon="&#xf013;" [isSelected]="isPageSelected('Settings')">
+      <MyDrawerItem title="Logout" icon="&#xf08b;" (onClick)="logout()">
       </MyDrawerItem>
     </StackLayout>
   </ScrollView>

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { RouterExtensions } from 'nativescript-angular/router';
 
 /* ***********************************************************
@@ -10,20 +10,15 @@ import { RouterExtensions } from 'nativescript-angular/router';
   templateUrl: './my-drawer-item.component.html',
   styleUrls: ['./my-drawer-item.component.css']
 })
-export class MyDrawerItemComponent implements OnInit {
+export class MyDrawerItemComponent {
   @Input() title: string;
   @Input() route: string;
   @Input() icon: string;
   @Input() isSelected: boolean;
+  @Output() onClick = new EventEmitter<void>();
 
   constructor(private routerExtensions: RouterExtensions) {
 
-  }
-
-  ngOnInit(): void {
-    /* ***********************************************************
-    * Use the MyDrawerItemComponent "onInit" event handler to initialize the properties data values.
-    *************************************************************/
   }
 
   /* ***********************************************************
@@ -32,10 +27,14 @@ export class MyDrawerItemComponent implements OnInit {
   * based on the tapped navigationItem's route.
   *************************************************************/
   onNavItemTap(navItemRoute: string): void {
-    this.routerExtensions.navigate([navItemRoute], {
-      transition: {
-        name: 'fade'
-      }
-    });
+    if (navItemRoute) {
+      this.routerExtensions.navigate([navItemRoute], {
+        transition: {
+          name: 'fade'
+        }
+      });
+    }
+
+    this.onClick.emit();
   }
 }
