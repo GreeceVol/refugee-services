@@ -1,0 +1,23 @@
+@import "../../../app-variables";
+
+$heading-font-size: 18;
+$subheading-font-size: 12;
+$service-list-item-padding-vertical: 10;
+$service-list-item-padding-horizontal: 10;
+
+.service-list-item {
+  padding: $service-list-item-padding-vertical $service-list-item-padding-horizontal;
+
+  .name {
+    font-size: $heading-font-size;
+    color: $headings-color;
+    text-transform: capitalize;
+  }
+
+  .description {
+    font-size: $subheading-font-size;
+    color: $secondary;
+    text-transform: capitalize;
+    text-overflow: ellipsis;
+  }
+}

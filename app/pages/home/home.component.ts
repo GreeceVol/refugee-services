@@ -4,6 +4,8 @@ import { DrawerTransitionBase, SlideInOnTopTransition } from 'nativescript-pro-u
 import { RadSideDrawerComponent } from 'nativescript-pro-ui/sidedrawer/angular';
 
 import { Key } from '../../shared/constants/key.constants';
+import { Service } from '../../shared/models/service';
+import { AuthService } from '../../shared/services/auth.service';
 import { StorageService } from '../../shared/services/storage.service';
 
 @Component({
@@ -21,11 +23,12 @@ export class HomeComponent implements OnInit {
   private _sideDrawerTransition: DrawerTransitionBase;
 
   constructor(
-    private storageService: StorageService,
-    private routerExtensions: RouterExtensions
+    private _storageService: StorageService,
+    private _authService: AuthService,
+    private _routerExtensions: RouterExtensions
   ) {
-    if (!this.storageService.getString(Key.TOKEN)) {
-      this.navigateToLogin();
+    if (!this._storageService.getString(Key.TOKEN)) {
+      this._navigateToLogin();
     }
   }
 
@@ -48,7 +51,16 @@ export class HomeComponent implements OnInit {
     this.drawerComponent.sideDrawer.showDrawer();
   }
 
-  private navigateToLogin() {
-    this.routerExtensions.navigate(['/login'], { clearHistory: true });
+  onServiceItemTap(event: { service: Service }): void {
+    // TODO: Implement service action
+  }
+
+  onUnauthorized(): void {
+    this._authService.logout();
+    this._navigateToLogin();
+  }
+
+  private _navigateToLogin() {
+    this._routerExtensions.navigate(['/login'], { clearHistory: true });
   }
 }
