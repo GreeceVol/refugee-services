@@ -5,34 +5,44 @@ import { Observable } from 'rxjs/Observable';
 import { Api } from '../constants/api.constants';
 import { Key } from '../constants/key.constants';
 import { Service } from '../models/service';
+import { CacheService } from '../services/cache.service';
 import { StorageService } from '../services/storage.service';
 
 @Injectable()
 export class ServiceService {
 
   constructor(
-    private http: Http,
-    private storageService: StorageService
+    private _http: Http,
+    private _storageService: StorageService,
+    private _cacheService: CacheService
   ) { }
 
   getList(): Observable<Service[]> {
-    const headers = this.getHeaders();
+    const headers = this._getHeaders();
 
-    return this.http.get(
+    const listObservable: Observable<Service[]> = this._http.get(
       Api.LIST_URL,
       { headers }
     )
-      .map((response: Response) => response.json())
-      .do((data: Service[]) => {
-        this.storageService.setString(Key.SERVICE_LIST, JSON.stringify(data));
-        this.storageService.setNumber(Key.SERVICE_LIST_LAST_UPDATED_TIME, Date.now());
+      .map((response: Response) => response.json());
+
+    return this._cacheService.observable(Key.SERVICE_LIST, listObservable);
+  }
+
+  getServiceByID(id: number): Observable<Service> {
+
+    return this.getList()
+      .map((services: Service[]) => {
+        const matchingService = services.find((service: Service) => service.ID === id);
+
+        return matchingService ? new Service(matchingService) : null;
       });
   }
 
-  private getHeaders(): Headers {
+  private _getHeaders(): Headers {
     const headers = new Headers();
     headers.append('Content-Type', 'application/json');
-    headers.append('Authorization', `Bearer ${this.storageService.getString(Key.TOKEN)}`);
+    headers.append('Authorization', `Bearer ${this._storageService.getString(Key.TOKEN)}`);
 
     return headers;
   }

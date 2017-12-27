@@ -1,0 +1,64 @@
+$service-function-container-offset-top: 10;
+
+$service-function-icon-size: 25;
+$service-function-icon-offset-top: 10;
+$service-function-icon-offset-bottom: 3;
+
+$service-function-info-color: #292C44;
+$service-function-add-item-color: #18CDCA;
+$service-function-queue-color: #FF5349;
+$service-function-buy-color: #4F80E1;
+
+$page-offset-horizontal: 10;
+
+$heading-font-size: 21;
+$subheading-font-size: 14;
+
+.service-page {
+  padding-left: $page-offset-horizontal;
+
+  .title {
+    font-size: $heading-font-size;
+    color: $headings-color;
+    text-transform: capitalize;
+  }
+
+  .description {
+    font-size: $subheading-font-size;
+    text-transform: capitalize;
+  }
+
+  .function-container {
+    padding-top: $service-function-container-offset-top;
+  }
+}
+
+.fa {
+  font-size: $service-function-icon-size;
+  margin-top: $service-function-icon-offset-top;
+  margin-bottom: $service-function-icon-offset-bottom;
+}
+
+.info {
+  .fa {
+    color: $service-function-info-color;
+  }
+}
+
+.item {
+  .fa {
+    color: $service-function-add-item-color;
+  }
+}
+
+.buy {
+  .fa {
+    color: $service-function-buy-color;
+  }
+}
+
+.queue {
+  .fa {
+    color: $service-function-queue-color;
+  }
+}

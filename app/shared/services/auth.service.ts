@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response } from '@angular/http';
+import { RouterExtensions } from 'nativescript-angular/router';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
 import { Observable } from 'rxjs/Rx';
@@ -16,13 +17,17 @@ interface ILoginResponse {
 
 @Injectable()
 export class AuthService {
-  constructor(private http: Http, private storageService: StorageService) { }
+  constructor(
+    private _http: Http,
+    private _storageService: StorageService,
+    private _routerExtensions: RouterExtensions
+  ) { }
 
   login(volunteer: Volunteer): Observable<ILoginResponse> {
     const headers = new Headers();
     headers.append('Content-Type', 'application/json');
 
-    return this.http.post(
+    return this._http.post(
       Api.LOGIN_URL,
       JSON.stringify({
         username: volunteer.email,
@@ -32,11 +37,16 @@ export class AuthService {
     )
       .map((response: Response) => response.json())
       .do((data: ILoginResponse) => {
-        this.storageService.setString(Key.TOKEN, data.token);
+        this._storageService.setString(Key.TOKEN, data.token);
       });
   }
 
   logout() {
-    this.storageService.clearAll();
+    this._storageService.clearAll();
+    this._routerExtensions.navigate(['/login'], { clearHistory: true });
+  }
+
+  isAuthenticated(): boolean {
+    return !!this._storageService.getString(Key.TOKEN);
   }
 }

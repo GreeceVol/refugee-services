@@ -1,4 +1,4 @@
-<RadListView [items]="services" pullToRefresh="true" (pullToRefreshInitiated)="onPullToRefreshInitiated($event)">
+<RadListView [items]="services">
   <ng-template let-service="item">
     <RL:Ripple rippleColor="#a6a6a6" (tap)="selectService(service)">
       <StackLayout class="service-list-item">
