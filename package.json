@@ -1,8 +1,8 @@
 {
-  "description": "NativeScript Application",
-  "license": "SEE LICENSE IN <your-license-filename>",
+  "description": "GreeceVol Refugee Services",
+  "license": "GPL-3.0+",
   "readme": "NativeScript Application",
-  "repository": "<fill-your-repository-here>",
+  "repository": "https://github.com/GreeceVol/refugee-services",
   "nativescript": {
     "id": "org.nativescript.refugeeservices",
     "tns-android": {
