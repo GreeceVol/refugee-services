@@ -1,25 +1,32 @@
+@import "../../app-variables";
+
 $service-function-container-offset-top: 10;
 
-$service-function-icon-size: 25;
-$service-function-icon-offset-top: 10;
-$service-function-icon-offset-bottom: 3;
+$service-function-icon-size: 40;
+$service-function-icon-offset-top: 15;
+$service-function-icon-offset-bottom: 5;
 
 $service-function-info-color: #292C44;
 $service-function-add-item-color: #18CDCA;
 $service-function-queue-color: #FF5349;
 $service-function-buy-color: #4F80E1;
 
-$page-offset-horizontal: 10;
+$service-function-title-size: 16;
+$service-function-title-offset: 10;
+
+$page-offset-horizontal: 20;
 
 $heading-font-size: 21;
 $subheading-font-size: 14;
 
+
 .service-page {
   padding-left: $page-offset-horizontal;
+  padding-right: $page-offset-horizontal;
 
   .title {
     font-size: $heading-font-size;
-    color: $headings-color;
+    color: $primary;
     text-transform: capitalize;
   }
 
@@ -31,6 +38,10 @@ $subheading-font-size: 14;
   .function-container {
     padding-top: $service-function-container-offset-top;
   }
+}
+
+.function-title {
+  font-size: $service-function-title-size;
 }
 
 .fa {

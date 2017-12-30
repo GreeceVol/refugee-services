@@ -1,0 +1,13 @@
+@import "../../../app-variables";
+
+$datepicker-modal-offset: 25;
+$datepicker-modal-offset-vertical: 20;
+
+.datepicker-modal {
+  padding: $datepicker-modal-offset-vertical $datepicker-modal-offset;
+  .title {
+    font-size: 20;
+    font-weight: bold;
+    color: $primary;
+  }
+}

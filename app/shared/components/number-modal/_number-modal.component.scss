@@ -1,0 +1,22 @@
+@import "../../../app-variables";
+
+$number-modal-offset: 25;
+$number-modal-offset-vertical: 20;
+
+$number-modal-input-offset: 20;
+$number-modal-input-offset-vertical: 30;
+
+.number-modal {
+  width: 80%;
+  padding: $number-modal-offset-vertical $number-modal-offset;
+
+  .title {
+    font-size: 20;
+    font-weight: bold;
+    color: $primary;
+  }
+
+  .number-input {
+    margin: $number-modal-input-offset-vertical $number-modal-input-offset;
+  }
+}

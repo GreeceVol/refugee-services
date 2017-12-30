@@ -33,11 +33,11 @@ it shouldn't have any other siblings other than the <ActionBar> component.
     <Label *ngIf="service" class="title" [text]="service.serviceName"></Label>
     <Label *ngIf="service" class="description" [text]="service.description"></Label>
     <StackLayout horizontalAlignment="center">
-      <WrapLayout class="function-container" horizontalAlignment="center" height="80">
+      <WrapLayout class="function-container" horizontalAlignment="center">
         <RL:Ripple *ngFor="let function of serviceFunctions" rippleColor="#a6a6a6" (tap)="selectFunction(function)" horizontalAlignment="center">
-          <StackLayout [className]="function.name" width="70" height="70" horizontalAlignment="center">
+          <StackLayout class="function" [className]="function.name" width="70" horizontalAlignment="center">
             <Label [text]="function.iconCode" class="fa" horizontalAlignment="center"></Label>
-            <Label [text]="function.title" horizontalAlignment="center"></Label>
+            <Label [text]="function.title" class="function-title" horizontalAlignment="center"></Label>
           </StackLayout>
         </RL:Ripple>
       </WrapLayout>

@@ -1,0 +1,5 @@
+<StackLayout class="number-modal">
+  <Label class="title" [text]="title"></Label>
+  <TextField #numberField class="number-input" keyboardType="number" returnKeyType="done" (returnPress)="submit(numberField.text)"></TextField>
+  <Button class="btn btn-primary btn-active" text="Submit" (tap)="submit(numberField.text)"></Button>
+</StackLayout>

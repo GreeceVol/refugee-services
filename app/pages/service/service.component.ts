@@ -1,19 +1,14 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { PageRoute, RouterExtensions } from 'nativescript-angular/router';
-import { BarcodeScanner } from 'nativescript-barcodescanner';
-import * as email from 'nativescript-email';
 import { DrawerTransitionBase, SlideInOnTopTransition } from 'nativescript-pro-ui/sidedrawer';
 import { RadSideDrawerComponent } from 'nativescript-pro-ui/sidedrawer/angular';
-import 'rxjs/add/operator/finally';
-import 'rxjs/add/operator/switchMap';
 import * as dialogs from 'ui/dialogs';
-import { Page } from 'ui/page';
 
 import { Key } from '../../shared/constants/key.constants';
 import { Service } from '../../shared/models/service';
 import { ServiceFunction } from '../../shared/models/service-function';
-import { AuthService } from '../../shared/services/auth.service';
+import { ScanError, ScanService } from '../../shared/services/scan.service';
 import { ServiceService } from '../../shared/services/service.service';
 
 @Component({
@@ -33,11 +28,11 @@ export class ServiceComponent implements OnInit {
   private _sideDrawerTransition: DrawerTransitionBase;
 
   constructor(
-    private _authService: AuthService,
-    private _serviceService: ServiceService,
-    private _routerExtensions: RouterExtensions,
     private _pageRoute: PageRoute,
-    private _barcodeScanner: BarcodeScanner
+    private _routerExtensions: RouterExtensions,
+    private _viewContainerRef: ViewContainerRef,
+    private _scanService: ScanService,
+    private _serviceService: ServiceService
   ) {
     this._pageRoute.activatedRoute
       .switchMap((activatedRoute: ActivatedRoute) => activatedRoute.params)
@@ -54,13 +49,50 @@ export class ServiceComponent implements OnInit {
   }
 
   selectFunction(serviceFunction: ServiceFunction): void {
-    this._barcodeScanner.scan({
-      formats: 'QR_CODE',
-      beepOnScan: true,
-      showTorchButton: true,
-      preferFrontCamera: false,
-      message: `${this._service.serviceName} (${serviceFunction.title} mode)`
-    });
+    try {
+      this._scanService.startScan(this._service, serviceFunction, this._viewContainerRef);
+    } catch (ex) {
+      if (ex) {
+        switch (ex.message) {
+          case ScanError.INVALID_SERVICE:
+            dialogs.alert({
+              title: 'Error',
+              message: 'Invalid service',
+              okButtonText: 'OK'
+            }).then(() => {
+              this._routerExtensions.backToPreviousPage();
+            });
+            break;
+
+          case ScanError.INVALID_SERVICE_FUNCTION:
+            dialogs.alert({
+              title: 'Error',
+              message: 'Invalid choice of service function',
+              okButtonText: 'OK'
+            });
+            break;
+
+          case ScanError.INVALID_SERVICE_ACTION:
+            dialogs.confirm({
+              title: 'Error',
+              message: 'Invalid choice of service action',
+              okButtonText: 'Try again',
+              neutralButtonText: 'Cancel'
+            }).then((shouldTryAgain: boolean) => {
+              if (shouldTryAgain) {
+                this.selectFunction(serviceFunction);
+              }
+            });
+            break;
+
+          default:
+            dialogs.alert({
+              title: 'Unknown error',
+              message: `Unexpected error\n\nAdditional details: \n ${ex.message}`
+            });
+        }
+      }
+    }
   }
 
   onDrawerButtonTap(): void {

@@ -1,8 +1,17 @@
+import { ServiceAction } from './service-action';
+
+export enum ServiceFunctionName {
+  INFO = 'info',
+  ITEM = 'item',
+  BUY = 'buy',
+  QUEUE = 'queue'
+}
+
 export class ServiceFunction {
 
   static getInfoFunction(): ServiceFunction {
     return new ServiceFunction(
-      'info',
+      ServiceFunctionName.INFO,
       'Info',
       'Shows the basic information of the cardholder',
       '\uf2c1' // fa-id-badge
@@ -11,7 +20,7 @@ export class ServiceFunction {
 
   static getItemFunction(): ServiceFunction {
     return new ServiceFunction(
-      'item',
+      ServiceFunctionName.ITEM,
       'Item',
       'Provide items to users, or show information about an item',
       '\uf0f4' // fa-coffee
@@ -20,7 +29,7 @@ export class ServiceFunction {
 
   static getBuyFunction(): ServiceFunction {
     return new ServiceFunction(
-      'buy',
+      ServiceFunctionName.BUY,
       'Buy',
       'Buy products with credits',
       '\uf07a' // fa-shopping-cart
@@ -29,7 +38,7 @@ export class ServiceFunction {
 
   static getQueueFunction(): ServiceFunction {
     return new ServiceFunction(
-      'queue',
+      ServiceFunctionName.QUEUE,
       'Queue',
       'Add user to queue',
       '\uf0c0' // fa-users
@@ -40,7 +49,7 @@ export class ServiceFunction {
 
   // Instantiation not allowed - Use one of the static objects instead
   protected constructor(
-    private _name: string,
+    private _name: ServiceFunctionName,
     private _title: string,
     private _description: string,
     private _iconCode: string
@@ -70,5 +79,20 @@ export class ServiceFunction {
 
   isStrictModeEnabled(): boolean {
     return this._isStrict;
+  }
+
+  getServiceActions(): ServiceAction[] {
+    switch (this._name) {
+      case ServiceFunctionName.BUY:
+        return ServiceAction.getBuyActions();
+      case ServiceFunctionName.ITEM:
+        return ServiceAction.getItemActions();
+      case ServiceFunctionName.QUEUE:
+        return ServiceAction.getQueueActions();
+      case ServiceFunctionName.INFO:
+        throw new Error('Info service-function does not have service-actions');
+      default:
+        throw new Error('Invalid service-function');
+    }
   }
 }

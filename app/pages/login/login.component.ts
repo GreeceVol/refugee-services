@@ -5,7 +5,6 @@ import 'rxjs/add/operator/finally';
 import * as dialogs from 'ui/dialogs';
 import { Page } from 'ui/page';
 
-import { Key } from '../../shared/constants/key.constants';
 import { Volunteer } from '../../shared/models/volunteer';
 import { AuthService } from '../../shared/services/auth.service';
 
@@ -28,6 +27,8 @@ export class LoginComponent implements OnInit {
     private page: Page
   ) {
     this.volunteer = new Volunteer();
+    // this.volunteer.email = 'vinaygopinath@yandex.com';
+    // this.volunteer.password = 'test-account';
   }
 
   ngOnInit(): void {
