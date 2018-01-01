@@ -34,6 +34,6 @@ export class NumberModalComponent {
   }
 
   submit(inputValue: string) {
-    this._params.closeCallback(inputValue);
+    this._params.closeCallback(Number.parseInt(inputValue));
   }
 }

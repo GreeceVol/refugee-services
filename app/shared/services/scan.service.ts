@@ -1,7 +1,7 @@
 import { Injectable, ViewContainerRef } from '@angular/core';
 import { BarcodeScanner, ScanResult } from 'nativescript-barcodescanner';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/operator/zip';
+import 'rxjs/add/observable/zip';
+import 'rxjs/add/operator/delay';
 import { Observable } from 'rxjs/Observable';
 import * as dialogs from 'ui/dialogs';
 
@@ -195,9 +195,7 @@ export class ScanService {
     const { service, serviceFunction, serviceAction, inputValue, userHash, force } = params;
     const actionURL = `${this._getURL(service, serviceFunction, serviceAction)}/services/${service.ID}/users/${userHash}${!!force ? '/?option=force' : ''}`;
 
-    // Observable.from expects the promise to be resolved with a value to work correctly
-    // Since barcodeScanner.stop() resolves with null, a non-null value (never used) is returned.
-    const stopScannerPromise = this._barcodeScanner.stop().then(() => actionURL);
+    const stopScannerPromise = this._barcodeScanner.stop();
 
     let body = null;
     if (this._needsAdditionalInput(service, serviceFunction, serviceAction)) {
@@ -218,13 +216,15 @@ export class ScanService {
       }
     }
 
-    return Observable.zip(
-      Observable.from(stopScannerPromise), this._networkService.authPost(actionURL, body)
-    )
-      .subscribe(
-      (resp: any[]) => this._handleSuccessResponse(params, resp[1]),
-      (err: any) => this._handleErrorResponse(params, err)
-      );
+    stopScannerPromise.then(
+      () => {
+        this._networkService.authPost(actionURL, body)
+          .delay(200)
+          .subscribe(
+          (resp: any) => this._handleSuccessResponse(params, resp),
+          (err: any) => new Promise((resolve: any) => setTimeout(resolve, 200)).then(() => this._handleErrorResponse(params, err)));
+      }
+    );
   }
 
   private _handleSuccessResponse(params: IScanParams, resp: any) {
@@ -259,6 +259,16 @@ export class ScanService {
                 okButtonText: 'Continue'
               });
             });
+            break;
+
+          case ServiceActionName.CHECK:
+            successPromise = dialogs.confirm({
+              title: 'Check success',
+              message: resp.message,
+              okButtonText: 'Continue',
+              cancelButtonText: 'Cancel'
+            });
+            break;
         }
         break;
 
@@ -287,16 +297,44 @@ export class ScanService {
         });
         break;
 
+      case ServiceFunctionName.BUY:
+        switch (serviceAction.name) {
+          case ServiceActionName.INFO:
+            successPromise = dialogs.confirm({
+              title: 'Credits Info',
+              message: resp.message,
+              okButtonText: 'Continue',
+              cancelButtonText: 'Cancel'
+            });
+            break;
+
+          case ServiceActionName.BUY:
+            successPromise = dialogs.confirm({
+              title: 'Buy (success)',
+              message: `${resp.message}\nRemaining credits: ${resp.remainingCredits}`,
+              okButtonText: 'Continue',
+              cancelButtonText: 'Cancel'
+            });
+        }
+        break;
+
       default:
         successPromise = dialogs.alert({
-          title: 'Success (not implemented)',
+          title: 'Success',
           message: `This function is not yet implemented. The HTTP success message (if any) is ${resp.message}\n\n\nFull JSON response:\n${JSON.stringify(resp, null, 2)}`
         });
     }
 
     successPromise.then((shouldContinue: boolean) => {
       if (shouldContinue && (!serviceAction || (serviceAction.name !== ServiceActionName.CORRECT))) {
-        this._showScanner(params);
+        this._showScanner({
+          service,
+          serviceFunction,
+          serviceAction,
+          viewContainerRef,
+          inputValue,
+          userHash: null
+        });
       }
     });
   }
@@ -338,7 +376,7 @@ export class ScanService {
               default:
                 dialogs.alert({
                   title: 'Not implemented',
-                  message: `Error handling for this function is not yet implemented. The error message (if any) is ${body.message}`
+                  message: `Error handling for this function is not yet implemented. The error message (if any) is ${body.message}\n\n\nFull JSON response:\n${JSON.stringify(err, null, 2)}`
                 });
             }
             break;
@@ -356,7 +394,14 @@ export class ScanService {
                   if (shouldAddToQueue) {
                     this.startScan(service, serviceFunction, viewContainerRef, ServiceAction.QUEUE_ADD_ACTION, inputValue, userHash);
                   } else if (shouldAddToQueue === false) {
-                    this._showScanner(params);
+                    this._showScanner({
+                      service,
+                      serviceFunction,
+                      serviceAction,
+                      inputValue,
+                      viewContainerRef,
+                      userHash: null
+                    });
                   }
                 });
                 break;
@@ -369,11 +414,78 @@ export class ScanService {
             }
             break;
 
+          case ServiceActionName.CHECK:
+            switch (err.status) {
+              case 403:
+                dialogs.confirm({
+                  title: 'Not in queue',
+                  message: 'The user is not in the queue',
+                  okButtonText: 'Add to queue',
+                  cancelButtonText: 'Continue',
+                  neutralButtonText: 'Cancel'
+                }).then((shouldAddToQueue: boolean) => {
+                  if (shouldAddToQueue) {
+                    this.startScan(service, serviceFunction, viewContainerRef, ServiceAction.QUEUE_ADD_ACTION, inputValue, userHash);
+                  } else if (shouldAddToQueue === false) {
+                    this._showScanner({
+                      service,
+                      serviceFunction,
+                      serviceAction,
+                      inputValue,
+                      viewContainerRef,
+                      userHash: null
+                    });
+                  }
+                });
+                break;
+
+              case 410:
+                dialogs.confirm({
+                  title: 'Queue check failed',
+                  message: body.message,
+                  okButtonText: 'Continue',
+                  neutralButtonText: 'Cancel'
+                }).then((shouldContinue: boolean) => {
+                  if (shouldContinue) {
+                    this._showScanner({
+                      service,
+                      serviceFunction,
+                      serviceAction,
+                      inputValue,
+                      viewContainerRef,
+                      userHash: null
+                    });
+                  }
+                });
+            }
+            break;
+
           default:
             dialogs.alert({
               title: 'Not implemented',
-              message: `Error handling for this function is not yet implemented. The error message (if any) is ${body.message}`
+              message: `Error handling for this function is not yet implemented. The error message (if any) is ${body.message}`,
+              okButtonText: 'Continue'
             });
+        }
+        break;
+
+      case ServiceFunctionName.BUY:
+        switch (serviceAction.name) {
+          case ServiceActionName.BUY:
+            dialogs.alert({
+              title: 'Buy error',
+              message: `Unable to complete purchase of item. Possibly insufficient credits?\n${body.message}`,
+              okButtonText: 'Continue'
+            });
+            break;
+
+          case ServiceActionName.INFO:
+            dialogs.alert({
+              title: 'Credits info error',
+              message: body.message,
+              okButtonText: 'Continue'
+            });
+            break;
         }
         break;
 

@@ -42,7 +42,7 @@ export class ServiceComponent implements OnInit {
   ngOnInit(): void {
     this._serviceService.getServiceByID(this._serviceID)
       .subscribe((service: Service) => {
-        this._service = new Service(service);
+        this._service = service;
         this._serviceFunctions = this._service.getServiceFunctions();
       });
     this._sideDrawerTransition = new SlideInOnTopTransition();

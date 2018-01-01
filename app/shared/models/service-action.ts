@@ -12,7 +12,7 @@ export class ServiceAction {
   static QUEUE_ADD_ACTION = new ServiceAction(ServiceActionName.ADD, 'Add to queue');
   static QUEUE_INFO_ACTION = new ServiceAction(ServiceActionName.INFO, 'Show info of user in queue');
   static QUEUE_CORRECT_ACTION = new ServiceAction(ServiceActionName.CORRECT, 'Correct/remove from queue');
-  static QUEUE_CHECK_ACTION = new ServiceAction(ServiceActionName.CHECK, 'Check if user has access to queue');
+  static QUEUE_CHECK_ACTION = new ServiceAction(ServiceActionName.CHECK, 'Check mode');
   static QUEUE_LIST_ACTION = new ServiceAction(ServiceActionName.LIST, 'List users in queue');
 
   static BUY_BUY_ACTION = new ServiceAction(ServiceActionName.BUY, 'Buy with credits');
