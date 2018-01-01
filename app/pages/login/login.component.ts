@@ -12,7 +12,7 @@ import { AuthService } from '../../shared/services/auth.service';
   selector: 'Login',
   moduleId: module.id,
   templateUrl: './login.component.html',
-  styleUrls: ['../../app.css', './login-common.css']
+  styleUrls: ['./login-common.css']
 })
 export class LoginComponent implements OnInit {
 
@@ -27,8 +27,6 @@ export class LoginComponent implements OnInit {
     private page: Page
   ) {
     this.volunteer = new Volunteer();
-    // this.volunteer.email = 'vinaygopinath@yandex.com';
-    // this.volunteer.password = 'test-account';
   }
 
   ngOnInit(): void {

@@ -1,4 +1,4 @@
-import { NgModule, NgModuleFactoryLoader, NO_ERRORS_SCHEMA } from '@angular/core';
+import { NgModule, NO_ERRORS_SCHEMA } from '@angular/core';
 import { NativeScriptCommonModule } from 'nativescript-angular/common';
 import { NativeScriptFormsModule } from 'nativescript-angular/forms';
 import { NativeScriptHttpModule } from 'nativescript-angular/http';
@@ -36,7 +36,6 @@ import { SharedModule } from './shared/shared.module';
     ...navigableComponents
   ],
   providers: [
-    { provide: NgModuleFactoryLoader, useClass: NSModuleFactoryLoader },
     ModalDialogService,
     BarcodeScanner,
     DialogService,

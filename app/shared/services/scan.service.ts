@@ -1,8 +1,8 @@
 import { Injectable, ViewContainerRef } from '@angular/core';
 import { BarcodeScanner, ScanResult } from 'nativescript-barcodescanner';
-import { Observable } from 'rxjs';
 import 'rxjs/add/observable/from';
 import 'rxjs/add/operator/zip';
+import { Observable } from 'rxjs/Observable';
 import * as dialogs from 'ui/dialogs';
 
 import { Api } from '../constants/api.constants';

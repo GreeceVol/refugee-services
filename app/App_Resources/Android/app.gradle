@@ -5,12 +5,22 @@
 //	compile 'com.android.support:recyclerview-v7:+'
 //}
 
-android {  
-  defaultConfig {  
+android {
+  defaultConfig {
     generatedDensities = []
-    applicationId = "org.nativescript.refugeeservices"  
-  }  
-  aaptOptions {  
-    additionalParameters "--no-version-vectors"  
-  }  
-} 
+    applicationId = "org.nativescript.refugeeservices"
+  }
+
+  aaptOptions {
+    additionalParameters "--no-version-vectors"
+  }
+
+  splits {
+    abi {
+      enable true //enables the ABIs split mechanism
+      reset() //reset the list of ABIs to be included to an empty string
+      include 'arm64-v8a', 'armeabi-v7a', 'x86'
+      universalApk true
+    }
+  }
+}
