@@ -8,7 +8,7 @@
 android {
   defaultConfig {
     generatedDensities = []
-    applicationId = "org.nativescript.refugeeservices"
+    applicationId = "org.greecevol.refugeeservices"
   }
 
   aaptOptions {

@@ -4,7 +4,7 @@
   "readme": "NativeScript Application",
   "repository": "https://github.com/GreeceVol/refugee-services",
   "nativescript": {
-    "id": "org.nativescript.refugeeservices",
+    "id": "org.greecevol.refugeeservices",
     "tns-android": {
       "version": "3.4.0"
     }
