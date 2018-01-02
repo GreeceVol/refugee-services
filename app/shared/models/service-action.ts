@@ -57,7 +57,7 @@ export class ServiceAction {
     return this._title;
   }
 
-  get name(): string {
+  get name(): ServiceActionName {
     return this._name;
   }
 

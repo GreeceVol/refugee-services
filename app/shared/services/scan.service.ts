@@ -52,7 +52,7 @@ export class ScanService {
 
     (servAction ? Promise.resolve(servAction) : this._chooseServiceAction(serviceFunction))
       .then((serviceAction: ServiceAction) => {
-        return (inpValue ? Promise.resolve(inpValue) : this._requestAdditionalInput(service, serviceFunction, serviceAction, viewContainerRef))
+        return (inpValue != null ? Promise.resolve(inpValue) : this._requestAdditionalInput(service, serviceFunction, serviceAction, viewContainerRef))
           .then(
           (inputValue: Date | number): IScanParams => ({
             service,
@@ -300,11 +300,10 @@ export class ScanService {
       case ServiceFunctionName.BUY:
         switch (serviceAction.name) {
           case ServiceActionName.INFO:
-            successPromise = dialogs.confirm({
+            successPromise = dialogs.alert({
               title: 'Credits Info',
               message: resp.message,
-              okButtonText: 'Continue',
-              cancelButtonText: 'Cancel'
+              okButtonText: 'OK'
             });
             break;
 
@@ -318,6 +317,34 @@ export class ScanService {
         }
         break;
 
+      case ServiceFunctionName.ITEM:
+        switch (serviceAction.name) {
+          case ServiceActionName.INFO:
+            successPromise = dialogs.alert({
+              title: 'User info for item',
+              message: `${resp.message}`,
+              okButtonText: 'OK'
+            });
+            break;
+
+          case ServiceActionName.ADD:
+            successPromise = dialogs.confirm({
+              title: 'Add item',
+              message: `${resp.message}`,
+              okButtonText: 'Continue',
+              cancelButtonText: 'Cancel'
+            });
+            break;
+
+          case ServiceActionName.CORRECT:
+            successPromise = dialogs.alert({
+              title: 'Correct item (success)',
+              message: resp.message,
+              okButtonText: 'OK'
+            });
+        }
+        break;
+
       default:
         successPromise = dialogs.alert({
           title: 'Success',
@@ -326,15 +353,26 @@ export class ScanService {
     }
 
     successPromise.then((shouldContinue: boolean) => {
-      if (shouldContinue && (!serviceAction || (serviceAction.name !== ServiceActionName.CORRECT))) {
-        this._showScanner({
-          service,
-          serviceFunction,
-          serviceAction,
-          viewContainerRef,
-          inputValue,
-          userHash: null
-        });
+      if (shouldContinue) {
+        if (!serviceAction || [ServiceActionName.ADD, ServiceActionName.CHECK, ServiceActionName.INFO].includes(serviceAction.name)) {
+          this._showScanner({
+            service,
+            serviceFunction,
+            serviceAction,
+            viewContainerRef,
+            inputValue,
+            userHash: null
+          });
+        } else if (serviceAction.name === ServiceActionName.BUY) {
+          this._showScanner({
+            service,
+            serviceFunction,
+            serviceAction,
+            viewContainerRef,
+            inputValue: null, // Skip the price
+            userHash: null
+          });
+        }
       }
     });
   }
@@ -464,7 +502,7 @@ export class ScanService {
             dialogs.alert({
               title: 'Not implemented',
               message: `Error handling for this function is not yet implemented. The error message (if any) is ${body.message}`,
-              okButtonText: 'Continue'
+              okButtonText: 'OK'
             });
         }
         break;
@@ -475,7 +513,7 @@ export class ScanService {
             dialogs.alert({
               title: 'Buy error',
               message: `Unable to complete purchase of item. Possibly insufficient credits?\n${body.message}`,
-              okButtonText: 'Continue'
+              okButtonText: 'OK'
             });
             break;
 
@@ -483,12 +521,30 @@ export class ScanService {
             dialogs.alert({
               title: 'Credits info error',
               message: body.message,
-              okButtonText: 'Continue'
+              okButtonText: 'OK'
             });
             break;
         }
         break;
 
+      case ServiceFunctionName.ITEM:
+        switch (serviceAction.name) {
+          case ServiceActionName.ADD:
+            dialogs.alert({
+              title: 'Add item error',
+              message: body.message,
+              okButtonText: 'OK'
+            });
+            break;
+
+          case ServiceActionName.CORRECT:
+            dialogs.alert({
+              title: 'Correct item error',
+              message: body.message,
+              okButtonText: 'OK'
+            });
+        }
+        break;
       default:
         dialogs.alert({
           title: 'Error (not implemented)',
