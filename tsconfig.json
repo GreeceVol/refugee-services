@@ -22,7 +22,10 @@
   },
   "exclude": [
     "node_modules",
-    "platforms",
-    "**/*.aot.ts"
-  ]
+    "platforms"
+  ],
+  "angularCompilerOptions": {
+    "preserveWhitespace": false,
+    "strictMetadataEmit": true
+  }
 }

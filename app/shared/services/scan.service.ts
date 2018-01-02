@@ -35,11 +35,15 @@ export enum ScanError {
 @Injectable()
 export class ScanService {
 
+  private _barcodeScanner: BarcodeScanner;
+
   constructor(
     private _dialogService: DialogService,
-    private _barcodeScanner: BarcodeScanner,
     private _networkService: NetworkService
-  ) { }
+  ) {
+    this._barcodeScanner = new BarcodeScanner();
+  }
+
   startScan(service: Service, serviceFunction: ServiceFunction, viewContainerRef: ViewContainerRef, servAction?: ServiceAction, inpValue?: Date | number, userHash?: string) {
 
     if (!service) {
