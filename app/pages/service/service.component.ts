@@ -7,6 +7,7 @@ import * as dialogs from 'ui/dialogs';
 
 import { Key } from '../../shared/constants/key.constants';
 import { Service } from '../../shared/models/service';
+import { ServiceAction } from '../../shared/models/service-action';
 import { ServiceFunction } from '../../shared/models/service-function';
 import { ScanError, ScanService } from '../../shared/services/scan.service';
 import { ServiceService } from '../../shared/services/service.service';
@@ -48,9 +49,13 @@ export class ServiceComponent implements OnInit {
     this._sideDrawerTransition = new SlideInOnTopTransition();
   }
 
-  selectFunction(serviceFunction: ServiceFunction): void {
+  selectCardInfo() {
+    this.selectAction(ServiceFunction.getInfoFunction(), null);
+  }
+
+  selectAction(serviceFunction: ServiceFunction, serviceAction: ServiceAction | null, inputValue?: Date | number): void {
     try {
-      this._scanService.startScan(this._service, serviceFunction, this._viewContainerRef);
+      this._scanService.startScan(this._service, serviceFunction, serviceAction, inputValue);
     } catch (ex) {
       if (ex) {
         switch (ex.message) {
@@ -72,23 +77,16 @@ export class ServiceComponent implements OnInit {
             });
             break;
 
-          case ScanError.INVALID_SERVICE_ACTION:
-            dialogs.confirm({
-              title: 'Error',
-              message: 'Invalid choice of service action',
-              okButtonText: 'Try again',
-              neutralButtonText: 'Cancel'
-            }).then((shouldTryAgain: boolean) => {
-              if (shouldTryAgain) {
-                this.selectFunction(serviceFunction);
-              }
-            });
+          case ScanError.INVALID_ADDITIONAL_INPUT:
+            this._scanService.requestAdditionalInput(this._service, serviceFunction, serviceAction, this._viewContainerRef)
+              .then((inpValue: Date | number) => this.selectAction(serviceFunction, serviceAction, inpValue));
             break;
 
           default:
             dialogs.alert({
               title: 'Unknown error',
-              message: `Unexpected error\n\nAdditional details: \n ${ex.message}`
+              message: `Unexpected error\n\nAdditional details: \n ${ex.message}`,
+              okButtonText: 'OK'
             });
         }
       }

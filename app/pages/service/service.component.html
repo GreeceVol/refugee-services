@@ -32,16 +32,18 @@ it shouldn't have any other siblings other than the <ActionBar> component.
 
     <Label *ngIf="service" class="title" [text]="service.serviceName"></Label>
     <Label *ngIf="service" class="description" [text]="service.description"></Label>
-    <StackLayout horizontalAlignment="center">
-      <WrapLayout class="function-container" horizontalAlignment="center">
-        <RL:Ripple *ngFor="let function of serviceFunctions" rippleColor="#a6a6a6" (tap)="selectFunction(function)" horizontalAlignment="center">
-          <StackLayout class="function" [className]="function.name" width="70" horizontalAlignment="center">
-            <Label [text]="function.iconCode" class="fa" horizontalAlignment="center"></Label>
-            <Label [text]="function.title" class="function-title" horizontalAlignment="center"></Label>
-          </StackLayout>
+    <ScrollView>
+      <StackLayout class="action-container">
+        <RL:Ripple rippleColor="#a6a6a6" (tap)="selectCardInfo()">
+          <Label class="action" text="Card info"></Label>
         </RL:Ripple>
-      </WrapLayout>
-    </StackLayout>
+        <StackLayout orientation="vertical" *ngFor="let function of serviceFunctions">
+          <RL:Ripple rippleColor="#a6a6a6" *ngFor="let action of function.getServiceActions()" (tap)="selectAction(function, action)">
+            <Label class="action" [text]="action.title"></Label>
+          </RL:Ripple>
+        </StackLayout>
+      </StackLayout>
+    </ScrollView>
 
   </StackLayout>
 </RadSideDrawer>

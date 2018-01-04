@@ -1,23 +1,15 @@
 @import "../../app-variables";
 
-$service-function-container-offset-top: 10;
+$service-action-container-offset-top: 20;
+$service-action-container-offset-horizontal: 3;
 
-$service-function-icon-size: 40;
-$service-function-icon-offset-top: 15;
-$service-function-icon-offset-bottom: 5;
-
-$service-function-info-color: #292C44;
-$service-function-add-item-color: #18CDCA;
-$service-function-queue-color: #FF5349;
-$service-function-buy-color: #4F80E1;
-
-$service-function-title-size: 16;
-$service-function-title-offset: 10;
+$service-action-offset-vertical: 5;
+$service-action-font-size: 14;
 
 $page-offset-horizontal: 20;
 
 $heading-font-size: 21;
-$subheading-font-size: 14;
+$subheading-font-size: 16;
 
 
 .service-page {
@@ -35,41 +27,15 @@ $subheading-font-size: 14;
     text-transform: capitalize;
   }
 
-  .function-container {
-    padding-top: $service-function-container-offset-top;
-  }
-}
+  .action-container {
+    padding-top: $service-action-container-offset-top;
+    padding-left: $service-action-container-offset-horizontal;
 
-.function-title {
-  font-size: $service-function-title-size;
-}
-
-.fa {
-  font-size: $service-function-icon-size;
-  margin-top: $service-function-icon-offset-top;
-  margin-bottom: $service-function-icon-offset-bottom;
-}
-
-.info {
-  .fa {
-    color: $service-function-info-color;
-  }
-}
-
-.item {
-  .fa {
-    color: $service-function-add-item-color;
-  }
-}
-
-.buy {
-  .fa {
-    color: $service-function-buy-color;
-  }
-}
-
-.queue {
-  .fa {
-    color: $service-function-queue-color;
+    .action {
+      color: $primary;
+      font-size: $service-action-font-size;
+      padding-top: $service-action-offset-vertical;
+      padding-bottom: $service-action-offset-vertical;
+    }
   }
 }

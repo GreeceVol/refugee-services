@@ -105,7 +105,7 @@ export class Service {
   }
 
   getServiceFunctions(): ServiceFunction[] {
-    const serviceFunctions: ServiceFunction[] = [ServiceFunction.getInfoFunction()];
+    const serviceFunctions: ServiceFunction[] = [];
 
     if (this.hasAdd) {
       const itemFunction = ServiceFunction
