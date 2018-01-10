@@ -1,6 +1,7 @@
 import { Injectable, ViewContainerRef } from '@angular/core';
 import { BarcodeScanner, ScanResult } from 'nativescript-barcodescanner';
-import 'rxjs/add/observable/zip';
+import { Observer } from 'rxjs';
+import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/delay';
 import { Observable } from 'rxjs/Observable';
 import * as dialogs from 'ui/dialogs';
@@ -13,7 +14,7 @@ import { User } from '../models/user';
 import { DialogService } from '../services/dialog.service';
 import { NetworkService } from '../services/network.service';
 
-interface IScanParams {
+export interface IScanParams {
   service: Service;
   serviceFunction: ServiceFunction;
   serviceAction: ServiceAction;
@@ -27,6 +28,8 @@ export enum ScanError {
   INVALID_SERVICE_FUNCTION = 'Invalid service function',
   INVALID_SERVICE_ACTION = 'Invalid service action',
   INVALID_ADDITIONAL_INPUT = 'The selected action requires user input',
+  INVALID_QR_CODE = 'The scanned QR code is invalid',
+  QR_CODE_REQUIRED = 'QR code missing',
   QUEUE_ADD_DATE_REQUIRED = 'Date is required to add users to the queue',
   BUY_BUY_PRICE_REQUIRED = 'The price of the product is required'
 }
@@ -43,18 +46,22 @@ export class ScanService {
     this._barcodeScanner = new BarcodeScanner();
   }
 
-  startScan(service: Service, serviceFunction: ServiceFunction, serviceAction: ServiceAction | null, inputValue?: Date | number, userHash?: string) {
+  performScanAction(service: Service, serviceFunction: ServiceFunction, serviceAction: ServiceAction | null, inputValue?: Date | number, userHash?: string): Observable<IScanParams> {
 
     if (!service) {
-      throw new Error(ScanError.INVALID_SERVICE);
+      return Observable.throw(ScanError.INVALID_SERVICE);
     }
 
     if (!serviceFunction) {
-      throw new Error(ScanError.INVALID_SERVICE_FUNCTION);
+      return Observable.throw(ScanError.INVALID_SERVICE_FUNCTION);
     }
 
     if (inputValue == null && this._needsAdditionalInput(service, serviceFunction, serviceAction)) {
-      throw new Error(ScanError.INVALID_ADDITIONAL_INPUT);
+      return Observable.throw(ScanError.INVALID_ADDITIONAL_INPUT);
+    }
+
+    if (!userHash) {
+      return Observable.throw(ScanError.QR_CODE_REQUIRED);
     }
 
     const params: IScanParams = {
@@ -62,11 +69,29 @@ export class ScanService {
       serviceFunction,
       serviceAction,
       inputValue,
-      userHash: userHash || null,
+      userHash,
       force: false
     };
 
-    params.userHash ? this._performActionRequest(params) : this._showScanner(params);
+    return new Observable((observer: Observer<IScanParams>) => {
+      const sendParamsAndCompleteObserver: (value: IScanParams) => void = (loopModeParams: IScanParams) => {
+        observer.next(loopModeParams);
+        observer.complete();
+      };
+
+      this._performActionRequest(params)
+        .delay(200)
+        .subscribe(
+        (resp: any) => {
+          this._handleSuccessResponse(params, resp).then(sendParamsAndCompleteObserver);
+        },
+        (err: any) => {
+          new Promise((resolve: any) => setTimeout(resolve, 200))
+            .then(() => this._handleErrorResponse(params, err))
+            .then(sendParamsAndCompleteObserver);
+        }
+        );
+    });
   }
 
   requestAdditionalInput(service: Service, serviceFunction: ServiceFunction, serviceAction: ServiceAction, viewContainerRef: ViewContainerRef): Promise<Date | number> {
@@ -115,49 +140,30 @@ export class ScanService {
     }
   }
 
-  private _needsAdditionalInput(service: Service, func: ServiceFunction, action: ServiceAction) {
-    const isQueueAndHasTimeSlot = service.hasTimeSlot && func.name === ServiceFunctionName.QUEUE && action.name === ServiceActionName.ADD;
-    const isBuy = func.name === ServiceFunctionName.BUY && action.name === ServiceActionName.BUY;
-
-    return isQueueAndHasTimeSlot || isBuy;
-  }
-
-  private _showScanner(params: IScanParams): void {
-    this._barcodeScanner.scan({
+  showScanner(service: Service, serviceFunction: ServiceFunction, serviceAction: ServiceAction | null): Promise<string> {
+    return this._barcodeScanner.scan({
       formats: 'QR_CODE',
       beepOnScan: true,
       showTorchButton: true,
       preferFrontCamera: false,
       reportDuplicates: true,
       resultDisplayDuration: 0,
-      message: `${params.service.serviceName} (${params.serviceFunction.title}` + (params.serviceAction ? ` - ${params.serviceAction.name} mode)` : ` mode)`)
-    }).then((res: ScanResult) => this._processScan({
-      service: params.service,
-      serviceFunction: params.serviceFunction,
-      serviceAction: params.serviceAction,
-      inputValue: params.inputValue,
-      userHash: res && res.text ? res.text : null
-    }));
+      message: `${service.serviceName} (${serviceFunction.title}` + (serviceAction ? ` - ${serviceAction.name} mode)` : ` mode)`)
+    }).then((res: ScanResult) => {
+      const userHash = res && res.text;
+      if (!userHash) {
+        throw new Error(ScanError.INVALID_QR_CODE);
+      }
+
+      return userHash;
+    });
   }
 
-  private _processScan(params: IScanParams): void {
-    const { service, serviceFunction, serviceAction, inputValue, userHash } = params;
-    if (!userHash) {
-      dialogs.confirm({
-        title: 'Invalid QR code',
-        message: 'The scanned QR code is invalid',
-        okButtonText: 'Scan another',
-        neutralButtonText: 'Cancel'
-      }).then((shouldContinue: boolean) => {
-        if (shouldContinue) {
-          this.startScan(service, serviceFunction, serviceAction, inputValue);
-        }
-      });
+  private _needsAdditionalInput(service: Service, func: ServiceFunction, action: ServiceAction) {
+    const isQueueAndHasTimeSlot = service.hasTimeSlot && func.name === ServiceFunctionName.QUEUE && action.name === ServiceActionName.ADD;
+    const isBuy = func.name === ServiceFunctionName.BUY && action.name === ServiceActionName.BUY;
 
-      return;
-    }
-
-    this._performActionRequest(params);
+    return isQueueAndHasTimeSlot || isBuy;
   }
 
   private _performActionRequest(params: IScanParams) {
@@ -183,15 +189,10 @@ export class ScanService {
       }
     }
 
-    this._networkService.authPost(actionURL, body)
-      .delay(200)
-      .subscribe(
-      (resp: any) => this._handleSuccessResponse(params, resp),
-      (err: any) => new Promise((resolve: any) => setTimeout(resolve, 200)).then(() => this._handleErrorResponse(params, err))
-      );
+    return this._networkService.authPost(actionURL, body);
   }
 
-  private _handleSuccessResponse(params: IScanParams, resp: any) {
+  private _handleSuccessResponse(params: IScanParams, resp: any): Promise<IScanParams | null> {
     const { service, serviceFunction, serviceAction, inputValue, userHash } = params;
     let successPromise = Promise.resolve(null);
     switch (serviceFunction.name) {
@@ -316,30 +317,28 @@ export class ScanService {
         });
     }
 
-    successPromise.then((shouldContinue: boolean) => {
-      if (shouldContinue) {
-        if (!serviceAction || [ServiceActionName.ADD, ServiceActionName.CHECK].includes(serviceAction.name)) {
-          this._showScanner({
-            service,
-            serviceFunction,
-            serviceAction,
-            inputValue,
-            userHash: null
-          });
-        } else if (serviceAction.name === ServiceActionName.BUY) {
-          this._showScanner({
-            service,
-            serviceFunction,
-            serviceAction,
-            inputValue: null, // Skip the price
-            userHash: null
-          });
-        }
+    return successPromise.then((shouldContinue: boolean) => {
+      if (!shouldContinue || !serviceAction) {
+        return null;
       }
+
+      const loopModeParams: IScanParams = {
+        service,
+        serviceFunction,
+        serviceAction,
+        inputValue,
+        userHash: null
+      };
+
+      if (serviceAction.name === ServiceActionName.BUY) {
+        loopModeParams.inputValue = null;
+      }
+
+      return loopModeParams;
     });
   }
 
-  private _handleErrorResponse(params: IScanParams, err: any) {
+  private _handleErrorResponse(params: IScanParams, err: any): Promise<IScanParams | null | void> {
     const { service, serviceFunction, serviceAction, inputValue, userHash } = params;
     let body;
     try {
@@ -347,80 +346,55 @@ export class ScanService {
     } catch (ex) {
       body = null;
     }
+
+    const defaultLoopParams: IScanParams = {
+      service,
+      serviceFunction,
+      serviceAction,
+      inputValue,
+      userHash: null
+    };
+
+    const continueWithDefaultLoopParams = (shouldContinue: boolean) => shouldContinue && defaultLoopParams;
+
     switch (serviceFunction.name) {
       case ServiceFunctionName.QUEUE:
         switch (serviceAction.name) {
           case ServiceActionName.ADD:
             switch (err.status) {
-              case 403:
-                dialogs.confirm({
-                  title: 'Already in queue',
-                  message: body.message,
-                  okButtonText: 'Continue',
-                  neutralButtonText: 'Cancel'
-                }).then((shouldContinue: boolean) => {
-                  if (shouldContinue) {
-                    this.startScan(service, serviceFunction, serviceAction, inputValue);
-                  }
-                });
-                break;
-
-              case 404:
-                dialogs.confirm({
-                  title: 'Not found',
-                  message: body.message,
-                  okButtonText: 'Continue',
-                  neutralButtonText: 'Cancel'
-                }).then((shouldContinue: boolean) => {
-                  if (shouldContinue) {
-                    this.startScan(service, serviceFunction, serviceAction, inputValue);
-                  }
-                });
-                break;
-
               case 500:
-                this._showGenericErrorAlert();
-                break;
+                return this._showGenericErrorAlert();
 
               default:
-                dialogs.alert({
-                  title: 'Not implemented',
-                  message: `Error handling for this function is not yet implemented. The error message (if any) is ${(body && body.message) || ''}
-                  \n\n\nFull JSON response:\n${JSON.stringify(err, null, 2)}`,
-                  okButtonText: 'OK'
-                });
+                return dialogs.confirm({
+                  title: 'Add to queue',
+                  message: body.message,
+                  okButtonText: 'Continue',
+                  neutralButtonText: 'Cancel'
+                }).then(continueWithDefaultLoopParams);
             }
-            break;
 
           case ServiceActionName.INFO:
             switch (err.status) {
               case 404:
-                dialogs.confirm({
+                return dialogs.confirm({
                   title: 'Not in queue',
                   message: 'The user is not in the queue',
                   okButtonText: 'Add to queue',
-                  cancelButtonText: 'Continue',
+                  cancelButtonText: 'OK',
                   neutralButtonText: 'Cancel'
                 }).then((shouldAddToQueue: boolean) => {
                   if (shouldAddToQueue) {
-                    this.startScan(service, serviceFunction, ServiceAction.QUEUE_ADD_ACTION, inputValue, userHash);
-                  } else if (shouldAddToQueue === false) {
-                    this._showScanner({
+                    return {
                       service,
                       serviceFunction,
-                      serviceAction,
+                      serviceAction: ServiceAction.QUEUE_ADD_ACTION,
                       inputValue,
-                      userHash: null
-                    });
+                      userHash
+                    };
                   }
-                });
-                break;
 
-              default:
-                dialogs.alert({
-                  title: 'Not implemented',
-                  message: `Error handling for this function is not yet implemented. The error message (if any) is ${(body && body.message) || ''}`,
-                  okButtonText: 'OK'
+                  return null;
                 });
             }
             break;
@@ -428,7 +402,7 @@ export class ScanService {
           case ServiceActionName.CHECK:
             switch (err.status) {
               case 403:
-                dialogs.confirm({
+                return dialogs.confirm({
                   title: 'Not in queue',
                   message: 'The user is not in the queue',
                   okButtonText: 'Add to queue',
@@ -436,56 +410,38 @@ export class ScanService {
                   neutralButtonText: 'Cancel'
                 }).then((shouldAddToQueue: boolean) => {
                   if (shouldAddToQueue) {
-                    this.startScan(service, serviceFunction, ServiceAction.QUEUE_ADD_ACTION, inputValue, userHash);
-                  } else if (shouldAddToQueue === false) {
-                    this._showScanner({
+                    return {
                       service,
                       serviceFunction,
-                      serviceAction,
+                      serviceAction: ServiceAction.QUEUE_ADD_ACTION,
                       inputValue,
-                      userHash: null
-                    });
+                      userHash
+                    };
+                  } else if (shouldAddToQueue === false) {
+                    return defaultLoopParams;
                   }
                 });
-                break;
 
               case 410:
-                dialogs.confirm({
+                return dialogs.confirm({
                   title: 'Queue check failed',
                   message: body.message,
                   okButtonText: 'Continue',
                   neutralButtonText: 'Cancel'
-                }).then((shouldContinue: boolean) => {
-                  if (shouldContinue) {
-                    this._showScanner({
-                      service,
-                      serviceFunction,
-                      serviceAction,
-                      inputValue,
-                      userHash: null
-                    });
-                  }
-                });
+                }).then(continueWithDefaultLoopParams);
             }
             break;
 
           case ServiceActionName.CORRECT:
             switch (err.status) {
               case 404:
-                dialogs.alert({
+                return dialogs.alert({
                   title: 'Correct error',
                   message: 'User not found in queue. Nothing to correct!',
                   okButtonText: 'OK'
                 });
             }
             break;
-
-          default:
-            dialogs.alert({
-              title: 'Not implemented',
-              message: `Error handling for this function is not yet implemented. The error message (if any) is ${(body && body.message) || ''}`,
-              okButtonText: 'OK'
-            });
         }
         break;
 
@@ -494,52 +450,49 @@ export class ScanService {
           case ServiceActionName.BUY:
             switch (err.status) {
               case 404:
-                dialogs.alert({
+                return dialogs.alert({
                   title: 'Buy error',
                   message: `${body.message}\nAvailable credits: ${body.availableCredits}`,
                   okButtonText: 'OK'
                 });
-                break;
 
               default:
-                dialogs.alert({
+                return dialogs.alert({
                   title: 'Buy error',
                   message: `Unable to complete purchase of item. Possibly insufficient credits?\n${body ? body.message : ''}`,
                   okButtonText: 'OK'
                 });
             }
-            break;
 
           case ServiceActionName.INFO:
-            dialogs.alert({
+            return dialogs.alert({
               title: 'Credits info error',
               message: body.message,
               okButtonText: 'OK'
             });
-            break;
         }
         break;
 
       case ServiceFunctionName.ITEM:
         switch (serviceAction.name) {
           case ServiceActionName.ADD:
-            dialogs.alert({
+            return dialogs.alert({
               title: 'Add item error',
               message: body.message,
               okButtonText: 'OK'
             });
-            break;
 
           case ServiceActionName.CORRECT:
-            dialogs.alert({
+            return dialogs.alert({
               title: 'Correct item error',
               message: body.message,
               okButtonText: 'OK'
             });
         }
         break;
+
       default:
-        dialogs.alert({
+        return dialogs.alert({
           title: 'Error (not implemented)',
           message: `Error handling for this function is not yet implemented. The error message (if any) is ${(body && body.message) || ''}\n\n\nFull JSON response:\n${JSON.stringify(body, null, 2)}`,
           okButtonText: 'OK'
@@ -548,7 +501,7 @@ export class ScanService {
   }
 
   private _showGenericErrorAlert(err?: { message?: string }) {
-    dialogs.alert({
+    return dialogs.alert({
       title: 'Error',
       message: `Error completing that action. Please try again later${err && err.message ? `\n${err.message}` : ''}`,
       okButtonText: 'OK'

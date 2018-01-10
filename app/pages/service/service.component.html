@@ -38,7 +38,7 @@ it shouldn't have any other siblings other than the <ActionBar> component.
           <Label class="action" text="Card info"></Label>
         </RL:Ripple>
         <StackLayout orientation="vertical" *ngFor="let function of serviceFunctions">
-          <RL:Ripple rippleColor="#a6a6a6" *ngFor="let action of function.getServiceActions()" (tap)="selectAction(function, action)">
+          <RL:Ripple rippleColor="#a6a6a6" *ngFor="let action of function.getServiceActions()" (tap)="startScan(function, action)">
             <Label class="action" [text]="action.title"></Label>
           </RL:Ripple>
         </StackLayout>

@@ -9,7 +9,7 @@ import { Key } from '../../shared/constants/key.constants';
 import { Service } from '../../shared/models/service';
 import { ServiceAction } from '../../shared/models/service-action';
 import { ServiceFunction } from '../../shared/models/service-function';
-import { ScanError, ScanService } from '../../shared/services/scan.service';
+import { IScanParams, ScanError, ScanService } from '../../shared/services/scan.service';
 import { ServiceService } from '../../shared/services/service.service';
 
 @Component({
@@ -50,15 +50,14 @@ export class ServiceComponent implements OnInit {
   }
 
   selectCardInfo() {
-    this.selectAction(ServiceFunction.getInfoFunction(), null);
+    this.startScan(ServiceFunction.getInfoFunction(), null);
   }
 
-  selectAction(serviceFunction: ServiceFunction, serviceAction: ServiceAction | null, inputValue?: Date | number): void {
-    try {
-      this._scanService.startScan(this._service, serviceFunction, serviceAction, inputValue);
-    } catch (ex) {
-      if (ex) {
-        switch (ex.message) {
+  startScan(serviceFunction: ServiceFunction, serviceAction: ServiceAction | null, inputValue?: Date | number, userHash?: string): void {
+    this._scanService.performScanAction(this._service, serviceFunction, serviceAction, inputValue, userHash)
+      .subscribe((params: IScanParams) => params && this.startScan(params.serviceFunction, params.serviceAction, params.inputValue, params.userHash),
+      (err: any) => {
+        switch (err) {
           case ScanError.INVALID_SERVICE:
             dialogs.alert({
               title: 'Error',
@@ -79,18 +78,30 @@ export class ServiceComponent implements OnInit {
 
           case ScanError.INVALID_ADDITIONAL_INPUT:
             this._scanService.requestAdditionalInput(this._service, serviceFunction, serviceAction, this._viewContainerRef)
-              .then((inpValue: Date | number) => this.selectAction(serviceFunction, serviceAction, inpValue));
+              .then((inpValue: Date | number) => this.startScan(serviceFunction, serviceAction, inpValue));
+            break;
+
+          case ScanError.QR_CODE_REQUIRED:
+            this._scanService.showScanner(this._service, serviceFunction, serviceAction)
+              .then(
+              (qrCode: string) => this.startScan(serviceFunction, serviceAction, inputValue, qrCode),
+              () => dialogs.confirm({
+                title: 'Invalid QR code',
+                message: 'The scanned QR code is invalid',
+                okButtonText: 'Scan another',
+                neutralButtonText: 'Cancel'
+              }).then((shouldContinue: boolean) => shouldContinue && this.startScan(serviceFunction, serviceAction, inputValue))
+              );
             break;
 
           default:
             dialogs.alert({
               title: 'Unknown error',
-              message: `Unexpected error\n\nAdditional details: \n ${ex.message}`,
+              message: `Unexpected error\n\nAdditional details: \n ${err && err.message || ''}`,
               okButtonText: 'OK'
             });
         }
-      }
-    }
+      });
   }
 
   onDrawerButtonTap(): void {

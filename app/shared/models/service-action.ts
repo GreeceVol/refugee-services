@@ -27,8 +27,8 @@ export class ServiceAction {
       ServiceAction.QUEUE_ADD_ACTION,
       ServiceAction.QUEUE_INFO_ACTION,
       ServiceAction.QUEUE_CORRECT_ACTION,
-      ServiceAction.QUEUE_CHECK_ACTION,
-      ServiceAction.QUEUE_LIST_ACTION
+      ServiceAction.QUEUE_CHECK_ACTION
+      // ServiceAction.QUEUE_LIST_ACTION // Currently not supported
     ];
   }
 
